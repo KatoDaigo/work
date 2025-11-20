@@ -6,6 +6,65 @@ const BONUS_24_MONTH = 1400;
 const FUMIN_RATE = 8500;
 const MINKAN_RATE = 8000;
 
+// ====== Firebase認証 ======
+
+let currentUser = null;
+
+// Googleでログイン
+function signInWithGoogle() {
+    auth.signInWithPopup(googleProvider)
+        .then((result) => {
+            console.log('ログイン成功:', result.user.email);
+        })
+        .catch((error) => {
+            console.error('ログインエラー:', error);
+            alert('ログインに失敗しました: ' + error.message);
+        });
+}
+
+// ログアウト
+function signOut() {
+    auth.signOut()
+        .then(() => {
+            console.log('ログアウト成功');
+        })
+        .catch((error) => {
+            console.error('ログアウトエラー:', error);
+            alert('ログアウトに失敗しました: ' + error.message);
+        });
+}
+
+// 認証状態の監視
+auth.onAuthStateChanged((user) => {
+    currentUser = user;
+
+    if (user) {
+        // ログイン中
+        document.getElementById('user-info').style.display = 'block';
+        document.getElementById('login-section').style.display = 'none';
+        document.getElementById('user-email').textContent = user.email;
+
+        // データを読み込む
+        loadDashboard();
+        loadYomiuriRecords();
+        loadChirashiRecords();
+    } else {
+        // ログアウト中
+        document.getElementById('user-info').style.display = 'none';
+        document.getElementById('login-section').style.display = 'block';
+        document.getElementById('user-email').textContent = '';
+
+        // データをクリア
+        clearAllData();
+    }
+});
+
+function clearAllData() {
+    document.getElementById('yomiuri-records-list').innerHTML = '<div class="no-records">ログインしてください</div>';
+    document.getElementById('chirashi-records-list').innerHTML = '<div class="no-records">ログインしてください</div>';
+    document.getElementById('monthly-table-body').innerHTML = '';
+}
+
 // 初期化
 document.addEventListener('DOMContentLoaded', function() {
     // タブ切り替え
@@ -76,10 +135,10 @@ function initYearSelector() {
     }
 }
 
-function loadDashboard() {
+async function loadDashboard() {
     const selectedYear = document.getElementById('dashboard-year').value;
-    const yomiuriRecords = getYomiuriRecords();
-    const chirashiRecords = getChirashiRecords();
+    const yomiuriRecords = await getYomiuriRecords();
+    const chirashiRecords = await getChirashiRecords();
 
     // 年間集計
     let yearlyYomiuri = 0;
@@ -152,7 +211,12 @@ function loadDashboard() {
 
 // ====== 読売新聞 ======
 
-function saveYomiuriRecord() {
+async function saveYomiuriRecord() {
+    if (!currentUser) {
+        alert('ログインしてください');
+        return;
+    }
+
     const date = document.getElementById('yomiuri-date').value;
     if (!date) {
         alert('日付を選択してください');
@@ -171,73 +235,81 @@ function saveYomiuriRecord() {
     const contractBonus = (contract6 * BONUS_6_MONTH) + (contract12 * BONUS_12_MONTH) + (contract24 * BONUS_24_MONTH);
     const total = baseSalary + transport + contractBonus;
 
-    let records = getYomiuriRecords();
-
     // 編集中のIDを取得（隠しフィールドから）
     const editingId = document.getElementById('yomiuri-editing-id') ? document.getElementById('yomiuri-editing-id').value : null;
 
-    if (editingId) {
-        // 既存の記録を更新
-        const index = records.findIndex(r => r.id === editingId);
-        if (index !== -1) {
-            records[index] = {
-                id: editingId,
-                date: date,
-                yc: yc,
-                hours: hours,
-                transport: transport,
-                contract6: contract6,
-                contract12: contract12,
-                contract24: contract24,
-                baseSalary: baseSalary,
-                contractBonus: contractBonus,
-                total: total
-            };
+    const recordData = {
+        date: date,
+        yc: yc,
+        hours: hours,
+        transport: transport,
+        contract6: contract6,
+        contract12: contract12,
+        contract24: contract24,
+        baseSalary: baseSalary,
+        contractBonus: contractBonus,
+        total: total
+    };
+
+    try {
+        const collectionRef = db.collection('users').doc(currentUser.uid).collection('yomiuri_records');
+
+        if (editingId) {
+            // 既存の記録を更新
+            await collectionRef.doc(editingId).set(recordData);
+            document.getElementById('yomiuri-editing-id').value = '';
+        } else {
+            // 新規記録を追加
+            await collectionRef.add(recordData);
         }
-        // 編集IDをクリア
-        document.getElementById('yomiuri-editing-id').value = '';
-    } else {
-        // 新規記録を追加
-        const record = {
-            id: Date.now().toString(), // 一意のIDを生成
-            date: date,
-            yc: yc,
-            hours: hours,
-            transport: transport,
-            contract6: contract6,
-            contract12: contract12,
-            contract24: contract24,
-            baseSalary: baseSalary,
-            contractBonus: contractBonus,
-            total: total
-        };
-        records.push(record);
+
+        // フォームをクリア
+        document.getElementById('yomiuri-yc').value = '';
+        document.getElementById('yomiuri-hours').value = '';
+        document.getElementById('yomiuri-transport').value = '';
+        document.getElementById('contract-6').value = '';
+        document.getElementById('contract-12').value = '';
+        document.getElementById('contract-24').value = '';
+
+        // 記録を再読み込み
+        await loadYomiuriRecords();
+        await loadDashboard(); // ダッシュボードも更新
+    } catch (error) {
+        console.error('データ保存エラー:', error);
+        alert('データの保存に失敗しました: ' + error.message);
+    }
+}
+
+async function getYomiuriRecords() {
+    if (!currentUser) {
+        return [];
     }
 
-    records.sort((a, b) => new Date(b.date) - new Date(a.date));
-    localStorage.setItem('yomiuri_records', JSON.stringify(records));
+    try {
+        const snapshot = await db.collection('users')
+            .doc(currentUser.uid)
+            .collection('yomiuri_records')
+            .get();
 
-    // フォームをクリア
-    document.getElementById('yomiuri-yc').value = '';
-    document.getElementById('yomiuri-hours').value = '';
-    document.getElementById('yomiuri-transport').value = '';
-    document.getElementById('contract-6').value = '';
-    document.getElementById('contract-12').value = '';
-    document.getElementById('contract-24').value = '';
+        const records = [];
+        snapshot.forEach(doc => {
+            records.push({
+                id: doc.id,
+                ...doc.data()
+            });
+        });
 
-    // 記録を再読み込み
-    loadYomiuriRecords();
-    loadDashboard(); // ダッシュボードも更新
+        records.sort((a, b) => new Date(b.date) - new Date(a.date));
+        return records;
+    } catch (error) {
+        console.error('読売新聞データの取得エラー:', error);
+        return [];
+    }
 }
 
-function getYomiuriRecords() {
-    const data = localStorage.getItem('yomiuri_records');
-    return data ? JSON.parse(data) : [];
-}
-
-function loadYomiuriRecords() {
+async function loadYomiuriRecords() {
     const month = document.getElementById('yomiuri-month').value;
-    const allRecords = getYomiuriRecords();
+    const allRecords = await getYomiuriRecords();
     const records = allRecords.filter(r => r.date.startsWith(month));
 
     // 記録リストを表示
@@ -271,6 +343,9 @@ function loadYomiuriRecords() {
         baseSalary: 0,
         transport: 0,
         contractBonus: 0,
+        contract6: 0,
+        contract12: 0,
+        contract24: 0,
         days: records.length,
         total: 0
     };
@@ -279,13 +354,19 @@ function loadYomiuriRecords() {
         summary.baseSalary += record.baseSalary;
         summary.transport += record.transport;
         summary.contractBonus += record.contractBonus;
+        summary.contract6 += record.contract6 || 0;
+        summary.contract12 += record.contract12 || 0;
+        summary.contract24 += record.contract24 || 0;
         summary.total += record.total;
     });
+
+    const totalContracts = summary.contract6 + summary.contract12 + summary.contract24;
 
     // 集計を表示
     document.getElementById('yomiuri-summary-base').textContent = `¥${summary.baseSalary.toLocaleString()}`;
     document.getElementById('yomiuri-summary-transport').textContent = `¥${summary.transport.toLocaleString()}`;
     document.getElementById('yomiuri-summary-bonus').textContent = `¥${summary.contractBonus.toLocaleString()}`;
+    document.getElementById('yomiuri-summary-contracts').textContent = `${totalContracts}件（6ヶ月:${summary.contract6} / 12ヶ月:${summary.contract12} / 24ヶ月:${summary.contract24}）`;
     document.getElementById('yomiuri-summary-days').textContent = `${summary.days}日`;
     document.getElementById('yomiuri-summary-total').textContent = `¥${summary.total.toLocaleString()}`;
 }
@@ -322,19 +403,37 @@ function editYomiuriRecord(id) {
     });
 }
 
-function deleteYomiuriRecord(id) {
+async function deleteYomiuriRecord(id) {
     if (!confirm('この記録を削除しますか？')) return;
 
-    let records = getYomiuriRecords();
-    records = records.filter(r => r.id !== id);
-    localStorage.setItem('yomiuri_records', JSON.stringify(records));
-    loadYomiuriRecords();
-    loadDashboard(); // ダッシュボードも更新
+    if (!currentUser) {
+        alert('ログインしてください');
+        return;
+    }
+
+    try {
+        await db.collection('users')
+            .doc(currentUser.uid)
+            .collection('yomiuri_records')
+            .doc(id)
+            .delete();
+
+        await loadYomiuriRecords();
+        await loadDashboard(); // ダッシュボードも更新
+    } catch (error) {
+        console.error('データ削除エラー:', error);
+        alert('データの削除に失敗しました: ' + error.message);
+    }
 }
 
 // ====== チラシ ======
 
-function saveChirashiRecord() {
+async function saveChirashiRecord() {
+    if (!currentUser) {
+        alert('ログインしてください');
+        return;
+    }
+
     const date = document.getElementById('chirashi-date').value;
     if (!date) {
         alert('日付を選択してください');
@@ -344,51 +443,66 @@ function saveChirashiRecord() {
     const type = document.getElementById('chirashi-type').value;
     const amount = type === 'fumin' ? FUMIN_RATE : MINKAN_RATE;
 
-    let records = getChirashiRecords();
-
     // 編集中のIDを取得（隠しフィールドから）
     const editingId = document.getElementById('chirashi-editing-id') ? document.getElementById('chirashi-editing-id').value : null;
 
-    if (editingId) {
-        // 既存の記録を更新
-        const index = records.findIndex(r => r.id === editingId);
-        if (index !== -1) {
-            records[index] = {
-                id: editingId,
-                date: date,
-                type: type,
-                amount: amount
-            };
+    const recordData = {
+        date: date,
+        type: type,
+        amount: amount
+    };
+
+    try {
+        const collectionRef = db.collection('users').doc(currentUser.uid).collection('chirashi_records');
+
+        if (editingId) {
+            // 既存の記録を更新
+            await collectionRef.doc(editingId).set(recordData);
+            document.getElementById('chirashi-editing-id').value = '';
+        } else {
+            // 新規記録を追加
+            await collectionRef.add(recordData);
         }
-        // 編集IDをクリア
-        document.getElementById('chirashi-editing-id').value = '';
-    } else {
-        // 新規記録を追加
-        const record = {
-            id: Date.now().toString(), // 一意のIDを生成
-            date: date,
-            type: type,
-            amount: amount
-        };
-        records.push(record);
+
+        // 記録を再読み込み
+        await loadChirashiRecords();
+        await loadDashboard(); // ダッシュボードも更新
+    } catch (error) {
+        console.error('データ保存エラー:', error);
+        alert('データの保存に失敗しました: ' + error.message);
+    }
+}
+
+async function getChirashiRecords() {
+    if (!currentUser) {
+        return [];
     }
 
-    records.sort((a, b) => new Date(b.date) - new Date(a.date));
-    localStorage.setItem('chirashi_records', JSON.stringify(records));
+    try {
+        const snapshot = await db.collection('users')
+            .doc(currentUser.uid)
+            .collection('chirashi_records')
+            .get();
 
-    // 記録を再読み込み
-    loadChirashiRecords();
-    loadDashboard(); // ダッシュボードも更新
+        const records = [];
+        snapshot.forEach(doc => {
+            records.push({
+                id: doc.id,
+                ...doc.data()
+            });
+        });
+
+        records.sort((a, b) => new Date(b.date) - new Date(a.date));
+        return records;
+    } catch (error) {
+        console.error('チラシデータの取得エラー:', error);
+        return [];
+    }
 }
 
-function getChirashiRecords() {
-    const data = localStorage.getItem('chirashi_records');
-    return data ? JSON.parse(data) : [];
-}
-
-function loadChirashiRecords() {
+async function loadChirashiRecords() {
     const month = document.getElementById('chirashi-month').value;
-    const allRecords = getChirashiRecords();
+    const allRecords = await getChirashiRecords();
     const records = allRecords.filter(r => r.date.startsWith(month));
 
     // 記録リストを表示
@@ -475,14 +589,27 @@ function editChirashiRecord(id) {
     });
 }
 
-function deleteChirashiRecord(id) {
+async function deleteChirashiRecord(id) {
     if (!confirm('この記録を削除しますか？')) return;
 
-    let records = getChirashiRecords();
-    records = records.filter(r => r.id !== id);
-    localStorage.setItem('chirashi_records', JSON.stringify(records));
-    loadChirashiRecords();
-    loadDashboard(); // ダッシュボードも更新
+    if (!currentUser) {
+        alert('ログインしてください');
+        return;
+    }
+
+    try {
+        await db.collection('users')
+            .doc(currentUser.uid)
+            .collection('chirashi_records')
+            .doc(id)
+            .delete();
+
+        await loadChirashiRecords();
+        await loadDashboard(); // ダッシュボードも更新
+    } catch (error) {
+        console.error('データ削除エラー:', error);
+        alert('データの削除に失敗しました: ' + error.message);
+    }
 }
 
 // ====== ユーティリティ ======

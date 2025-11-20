@@ -1,0 +1,9 @@
+# Firebase設定ファイル（機密情報を含む）
+firebase-config.js
+
+# macOSファイル
+.DS_Store
+
+# Windowsファイル
+Thumbs.db
+desktop.ini

@@ -5,11 +5,25 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>給与計算システム</title>
     <link rel="stylesheet" href="style.css">
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
 </head>
 <body>
     <div class="container">
         <header>
             <h1>給与計算システム</h1>
+            <div id="auth-section">
+                <div id="user-info" style="display: none;">
+                    <span id="user-email"></span>
+                    <button onclick="signOut()" class="auth-button">ログアウト</button>
+                </div>
+                <div id="login-section">
+                    <button onclick="signInWithGoogle()" class="auth-button">Googleでログイン</button>
+                </div>
+            </div>
         </header>
 
         <!-- タブバー -->
@@ -149,6 +163,10 @@
                             <span id="yomiuri-summary-bonus">¥0</span>
                         </div>
                         <div class="summary-item">
+                            <span>契約枚数合計：</span>
+                            <span id="yomiuri-summary-contracts">0件</span>
+                        </div>
+                        <div class="summary-item">
                             <span>勤務日数：</span>
                             <span id="yomiuri-summary-days">0日</span>
                         </div>
@@ -225,6 +243,7 @@
         </div>
     </div>
 
+    <script src="firebase-config.js"></script>
     <script src="script.js"></script>
 </body>
 </html>
