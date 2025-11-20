@@ -1,0 +1,498 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+    background: #f5f5f5;
+    min-height: 100vh;
+    padding: 20px;
+    color: #333;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    background: white;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+header {
+    background: #2c3e50;
+    color: white;
+    padding: 24px 32px;
+    border-bottom: 3px solid #1a252f;
+}
+
+header h1 {
+    font-size: 1.5em;
+    font-weight: 600;
+    letter-spacing: -0.5px;
+}
+
+/* タブバー */
+.tab-bar {
+    display: flex;
+    background: #fff;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.tab-button {
+    flex: 1;
+    padding: 16px 24px;
+    border: none;
+    background: transparent;
+    font-size: 0.95em;
+    font-weight: 500;
+    color: #666;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    position: relative;
+    border-bottom: 2px solid transparent;
+}
+
+.tab-button:hover {
+    background: #fafafa;
+    color: #333;
+}
+
+.tab-button.active {
+    color: #2c3e50;
+    border-bottom: 2px solid #2c3e50;
+}
+
+/* コンテンツ */
+.tab-content {
+    display: none;
+    padding: 32px;
+}
+
+.tab-content.active {
+    display: block;
+}
+
+/* 日付選択エリア */
+.date-selector {
+    background: #fafafa;
+    padding: 20px;
+    border: 1px solid #e0e0e0;
+    margin-bottom: 24px;
+}
+
+.date-controls {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+}
+
+.date-controls input[type="date"],
+.date-controls select {
+    padding: 10px 14px;
+    border: 1px solid #d0d0d0;
+    background: white;
+    font-size: 0.95em;
+    color: #333;
+}
+
+.date-controls input[type="date"]:focus,
+.date-controls select:focus {
+    outline: none;
+    border-color: #2c3e50;
+}
+
+/* メインコンテンツエリア */
+.content-grid {
+    display: grid;
+    grid-template-columns: 1fr 400px;
+    gap: 24px;
+}
+
+.input-section {
+    background: white;
+}
+
+.summary-section {
+    background: #fafafa;
+    padding: 20px;
+    border: 1px solid #e0e0e0;
+    align-self: start;
+}
+
+h2 {
+    color: #2c3e50;
+    margin-bottom: 24px;
+    font-size: 1.4em;
+    font-weight: 600;
+    border-bottom: 2px solid #e0e0e0;
+    padding-bottom: 12px;
+}
+
+h3 {
+    color: #2c3e50;
+    margin: 20px 0 16px 0;
+    font-size: 1.1em;
+    font-weight: 600;
+}
+
+/* フォーム */
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 6px;
+    color: #555;
+    font-weight: 500;
+    font-size: 0.9em;
+}
+
+.form-group input,
+.form-group select {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #d0d0d0;
+    background: white;
+    font-size: 0.95em;
+    transition: border-color 0.2s ease;
+}
+
+.form-group input:focus,
+.form-group select:focus {
+    outline: none;
+    border-color: #2c3e50;
+}
+
+.contract-section {
+    background: #fafafa;
+    padding: 20px;
+    border: 1px solid #e0e0e0;
+    margin: 20px 0;
+}
+
+/* ボタン */
+.calc-button {
+    width: 100%;
+    padding: 12px;
+    background: #2c3e50;
+    color: white;
+    border: none;
+    font-size: 0.95em;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s ease;
+    margin-top: 20px;
+}
+
+.calc-button:hover {
+    background: #1a252f;
+}
+
+.calc-button:active {
+    background: #0f1419;
+}
+
+/* 日別記録リスト */
+.daily-records {
+    margin-top: 24px;
+}
+
+.record-item {
+    background: white;
+    border: 1px solid #e0e0e0;
+    padding: 16px;
+    margin-bottom: 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.record-date {
+    font-weight: 600;
+    color: #2c3e50;
+    font-size: 0.95em;
+}
+
+.record-amount {
+    font-weight: 600;
+    color: #333;
+    font-size: 1.1em;
+}
+
+.record-edit {
+    background: #3498db;
+    color: white;
+    border: none;
+    padding: 6px 12px;
+    font-size: 0.85em;
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+
+.record-edit:hover {
+    background: #2980b9;
+}
+
+.record-delete {
+    background: #dc3545;
+    color: white;
+    border: none;
+    padding: 6px 12px;
+    font-size: 0.85em;
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+
+.record-delete:hover {
+    background: #c82333;
+}
+
+.no-records {
+    color: #999;
+    text-align: center;
+    padding: 32px;
+    font-size: 0.9em;
+}
+
+/* 月間集計 */
+.monthly-summary {
+    background: white;
+    border: 1px solid #e0e0e0;
+    padding: 20px;
+}
+
+.summary-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px 0;
+    border-bottom: 1px solid #f0f0f0;
+    font-size: 0.9em;
+}
+
+.summary-item:last-child {
+    border-bottom: none;
+}
+
+.summary-item span:first-child {
+    color: #666;
+    font-weight: 500;
+}
+
+.summary-item span:last-child {
+    color: #333;
+    font-weight: 600;
+}
+
+.summary-item.total {
+    margin-top: 12px;
+    padding-top: 16px;
+    border-top: 2px solid #2c3e50;
+    font-size: 1.1em;
+}
+
+.summary-item.total span:last-child {
+    color: #2c3e50;
+    font-size: 1.3em;
+}
+
+/* ダッシュボード */
+.dashboard-header {
+    margin-bottom: 32px;
+}
+
+.year-selector {
+    display: inline-block;
+}
+
+.year-selector label {
+    display: block;
+    margin-bottom: 8px;
+    color: #555;
+    font-weight: 500;
+    font-size: 0.9em;
+}
+
+.year-selector select {
+    padding: 10px 40px 10px 14px;
+    border: 1px solid #d0d0d0;
+    background: white;
+    font-size: 0.95em;
+    color: #333;
+    cursor: pointer;
+}
+
+.year-selector select:focus {
+    outline: none;
+    border-color: #2c3e50;
+}
+
+/* 統計カード */
+.dashboard-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+    margin-bottom: 40px;
+}
+
+.stat-card {
+    background: white;
+    border: 1px solid #e0e0e0;
+    padding: 28px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.stat-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+}
+
+.stat-card-primary {
+    border-left: 4px solid #2c3e50;
+}
+
+.stat-card-success {
+    border-left: 4px solid #27ae60;
+}
+
+.stat-card-info {
+    border-left: 4px solid #3498db;
+}
+
+.stat-icon {
+    font-size: 3em;
+    line-height: 1;
+}
+
+.stat-content {
+    flex: 1;
+}
+
+.stat-label {
+    font-size: 0.85em;
+    color: #666;
+    margin-bottom: 8px;
+    font-weight: 500;
+}
+
+.stat-value {
+    font-size: 2em;
+    font-weight: 700;
+    color: #2c3e50;
+    line-height: 1;
+}
+
+/* 月別集計 */
+.monthly-breakdown {
+    background: white;
+    border: 1px solid #e0e0e0;
+    padding: 24px;
+}
+
+.monthly-breakdown h2 {
+    margin-top: 0;
+}
+
+.table-container {
+    overflow-x: auto;
+}
+
+.monthly-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.95em;
+}
+
+.monthly-table thead {
+    background: #fafafa;
+}
+
+.monthly-table th {
+    padding: 14px 16px;
+    text-align: left;
+    font-weight: 600;
+    color: #2c3e50;
+    border-bottom: 2px solid #e0e0e0;
+}
+
+.monthly-table td {
+    padding: 14px 16px;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.monthly-table tbody tr:hover {
+    background: #fafafa;
+}
+
+.monthly-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.monthly-table .month-cell {
+    font-weight: 600;
+    color: #2c3e50;
+}
+
+.monthly-table .total-cell {
+    font-weight: 700;
+    color: #2c3e50;
+}
+
+/* レスポンシブ */
+@media (max-width: 900px) {
+    .content-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .summary-section {
+        order: -1;
+    }
+
+    .dashboard-stats {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 600px) {
+    body {
+        padding: 10px;
+    }
+
+    header {
+        padding: 20px;
+    }
+
+    header h1 {
+        font-size: 1.3em;
+    }
+
+    .tab-content {
+        padding: 20px;
+    }
+
+    .date-controls {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .tab-button {
+        padding: 12px;
+        font-size: 0.9em;
+    }
+
+    .stat-card {
+        padding: 20px;
+    }
+
+    .stat-icon {
+        font-size: 2.5em;
+    }
+
+    .stat-value {
+        font-size: 1.5em;
+    }
+}

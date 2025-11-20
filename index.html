@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>給与計算システム</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>給与計算システム</h1>
+        </header>
+
+        <!-- タブバー -->
+        <div class="tab-bar">
+            <button class="tab-button active" data-tab="dashboard">ダッシュボード</button>
+            <button class="tab-button" data-tab="yomiuri">読売新聞</button>
+            <button class="tab-button" data-tab="chirashi">チラシ</button>
+        </div>
+
+        <!-- ダッシュボード -->
+        <div id="dashboard" class="tab-content active">
+            <div class="dashboard-header">
+                <div class="year-selector">
+                    <label for="dashboard-year">年度選択</label>
+                    <select id="dashboard-year"></select>
+                </div>
+            </div>
+
+            <div class="dashboard-stats">
+                <div class="stat-card stat-card-primary">
+                    <div class="stat-icon">📊</div>
+                    <div class="stat-content">
+                        <div class="stat-label">年間合計</div>
+                        <div class="stat-value" id="yearly-total">¥0</div>
+                    </div>
+                </div>
+                <div class="stat-card stat-card-success">
+                    <div class="stat-icon">📰</div>
+                    <div class="stat-content">
+                        <div class="stat-label">読売新聞（年間）</div>
+                        <div class="stat-value" id="yearly-yomiuri">¥0</div>
+                    </div>
+                </div>
+                <div class="stat-card stat-card-info">
+                    <div class="stat-icon">📄</div>
+                    <div class="stat-content">
+                        <div class="stat-label">チラシ（年間）</div>
+                        <div class="stat-value" id="yearly-chirashi">¥0</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="monthly-breakdown">
+                <h2>月別集計</h2>
+                <div class="table-container">
+                    <table class="monthly-table">
+                        <thead>
+                            <tr>
+                                <th>月</th>
+                                <th>読売新聞</th>
+                                <th>チラシ</th>
+                                <th>合計</th>
+                            </tr>
+                        </thead>
+                        <tbody id="monthly-table-body">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- 読売新聞セクション -->
+        <div id="yomiuri" class="tab-content">
+            <!-- 日付・月選択 -->
+            <div class="date-selector">
+                <div class="date-controls">
+                    <div>
+                        <label for="yomiuri-month">対象月</label>
+                        <input type="month" id="yomiuri-month">
+                    </div>
+                    <div>
+                        <label for="yomiuri-date">日付</label>
+                        <input type="date" id="yomiuri-date">
+                    </div>
+                </div>
+            </div>
+
+            <div class="content-grid">
+                <!-- 入力セクション -->
+                <div class="input-section">
+                    <h2>勤務データ入力</h2>
+
+                    <div class="form-group">
+                        <label for="yomiuri-yc">稼働先YC</label>
+                        <input type="text" id="yomiuri-yc" placeholder="例: 東京YC">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="yomiuri-hours">勤務時間（時間）</label>
+                        <input type="number" id="yomiuri-hours" min="0" step="0.5" placeholder="例: 8">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="yomiuri-transport">交通費（円）</label>
+                        <input type="number" id="yomiuri-transport" min="0" placeholder="例: 500">
+                    </div>
+
+                    <div class="contract-section">
+                        <h3>契約件数</h3>
+                        <div class="form-group">
+                            <label for="contract-6">6ヶ月カード（600円/件）</label>
+                            <input type="number" id="contract-6" min="0" placeholder="0">
+                        </div>
+                        <div class="form-group">
+                            <label for="contract-12">12ヶ月カード（1100円/件）</label>
+                            <input type="number" id="contract-12" min="0" placeholder="0">
+                        </div>
+                        <div class="form-group">
+                            <label for="contract-24">24ヶ月カード（1400円/件）</label>
+                            <input type="number" id="contract-24" min="0" placeholder="0">
+                        </div>
+                    </div>
+
+                    <button class="calc-button" onclick="saveYomiuriRecord()">記録を保存</button>
+
+                    <!-- 日別記録リスト -->
+                    <div class="daily-records">
+                        <h3>記録一覧</h3>
+                        <div id="yomiuri-records-list"></div>
+                    </div>
+                </div>
+
+                <!-- 月間集計セクション -->
+                <div class="summary-section">
+                    <h3>月間集計</h3>
+                    <div class="monthly-summary" id="yomiuri-summary">
+                        <div class="summary-item">
+                            <span>基本給合計：</span>
+                            <span id="yomiuri-summary-base">¥0</span>
+                        </div>
+                        <div class="summary-item">
+                            <span>交通費合計：</span>
+                            <span id="yomiuri-summary-transport">¥0</span>
+                        </div>
+                        <div class="summary-item">
+                            <span>契約ボーナス合計：</span>
+                            <span id="yomiuri-summary-bonus">¥0</span>
+                        </div>
+                        <div class="summary-item">
+                            <span>勤務日数：</span>
+                            <span id="yomiuri-summary-days">0日</span>
+                        </div>
+                        <div class="summary-item total">
+                            <span>月間合計：</span>
+                            <span id="yomiuri-summary-total">¥0</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- チラシセクション -->
+        <div id="chirashi" class="tab-content">
+            <!-- 日付・月選択 -->
+            <div class="date-selector">
+                <div class="date-controls">
+                    <div>
+                        <label for="chirashi-month">対象月</label>
+                        <input type="month" id="chirashi-month">
+                    </div>
+                    <div>
+                        <label for="chirashi-date">日付</label>
+                        <input type="date" id="chirashi-date">
+                    </div>
+                </div>
+            </div>
+
+            <div class="content-grid">
+                <!-- 入力セクション -->
+                <div class="input-section">
+                    <h2>勤務データ入力</h2>
+
+                    <div class="form-group">
+                        <label for="chirashi-type">稼働タイプ</label>
+                        <select id="chirashi-type">
+                            <option value="fumin">府民稼働（8500円）</option>
+                            <option value="minkan">民間稼働（8000円）</option>
+                        </select>
+                    </div>
+
+                    <button class="calc-button" onclick="saveChirashiRecord()">記録を保存</button>
+
+                    <!-- 日別記録リスト -->
+                    <div class="daily-records">
+                        <h3>記録一覧</h3>
+                        <div id="chirashi-records-list"></div>
+                    </div>
+                </div>
+
+                <!-- 月間集計セクション -->
+                <div class="summary-section">
+                    <h3>月間集計</h3>
+                    <div class="monthly-summary" id="chirashi-summary">
+                        <div class="summary-item">
+                            <span>府民稼働：</span>
+                            <span id="chirashi-summary-fumin">0日 / ¥0</span>
+                        </div>
+                        <div class="summary-item">
+                            <span>民間稼働：</span>
+                            <span id="chirashi-summary-minkan">0日 / ¥0</span>
+                        </div>
+                        <div class="summary-item">
+                            <span>勤務日数：</span>
+                            <span id="chirashi-summary-days">0日</span>
+                        </div>
+                        <div class="summary-item total">
+                            <span>月間合計：</span>
+                            <span id="chirashi-summary-total">¥0</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
