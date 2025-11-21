@@ -37,12 +37,18 @@ function signOut() {
 // 認証状態の監視
 auth.onAuthStateChanged((user) => {
     currentUser = user;
+    const loginOverlay = document.getElementById('login-overlay');
 
     if (user) {
         // ログイン中
         document.getElementById('user-info').style.display = 'block';
         document.getElementById('login-section').style.display = 'none';
         document.getElementById('user-email').textContent = user.email;
+
+        // ログインオーバーレイを非表示
+        if (loginOverlay) {
+            loginOverlay.classList.add('hidden');
+        }
 
         // データを読み込む
         loadDashboard();
@@ -53,6 +59,11 @@ auth.onAuthStateChanged((user) => {
         document.getElementById('user-info').style.display = 'none';
         document.getElementById('login-section').style.display = 'block';
         document.getElementById('user-email').textContent = '';
+
+        // ログインオーバーレイを表示
+        if (loginOverlay) {
+            loginOverlay.classList.remove('hidden');
+        }
 
         // データをクリア
         clearAllData();
